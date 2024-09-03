@@ -8,8 +8,8 @@
   - [x] Prevent trees/rocks/bushes from intersecting each other
   - [x] Add controls to UI for world
 - [ ] Player Character
-  - [ ] Draw character on the screen
-  - [ ] Point and click controls
+  - [x] Draw character on the screen
+  - [x] Point and click controls
   - [ ] Navigation (ignore obstacles)
     - [ ] A\* algorithm
   - [ ] Improved Navigation (obstacle avoidance)
