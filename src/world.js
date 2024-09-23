@@ -6,6 +6,13 @@ const gridTexture = textureLoader.load('textures/grid.png');
 export class World extends THREE.Group {
   #objectMap = new Map();
 
+  /**
+   * Returns the key for the object map given a set of coordinates
+   * @param {THREE.Vector2} coords 
+   * @returns 
+   */
+  getKey = (coords) => `${coords.x}-${coords.y}`;
+
   constructor(width, height) {
     super();
 
@@ -23,6 +30,9 @@ export class World extends THREE.Group {
 
     this.bushes = new THREE.Group();
     this.add(this.bushes);
+
+    this.path = new THREE.Group();
+    this.add(this.path);
 
     this.generate();
   }
@@ -98,16 +108,16 @@ export class World extends THREE.Group {
     });
 
     for (let i = 0; i < this.treeCount; i++) {
-      const treeMesh = new THREE.Mesh(treeGeometry, treeMaterial);
-
       const coords = new THREE.Vector2(
         Math.floor(this.width * Math.random()),
         Math.floor(this.height * Math.random())
       );
 
       // Don't place objects on top of each other
-      if (this.#objectMap.has(`${coords.x}-${coords.y}`)) continue;
+      if (this.#objectMap.has(this.getKey(coords))) continue;
 
+      const treeMesh = new THREE.Mesh(treeGeometry, treeMaterial);
+      treeMesh.name = `Tree-(${coords.x},${coords.y})`;
       treeMesh.position.set(
         coords.x + 0.5,
         treeHeight / 2,
@@ -116,7 +126,7 @@ export class World extends THREE.Group {
 
       this.trees.add(treeMesh);
 
-      this.#objectMap.set(`${coords.x}-${coords.y}`, treeMesh);
+      this.#objectMap.set(this.getKey(coords), treeMesh);
     }
   }
 
@@ -135,8 +145,6 @@ export class World extends THREE.Group {
     for (let i = 0; i < this.rockCount; i++) {
       const radius = minRockRadius + (Math.random() * (maxRockRadius - minRockRadius));
       const height = minRockHeight + (Math.random() * (maxRockHeight - minRockHeight));
-      const rockGeometry = new THREE.SphereGeometry(radius, 6, 5);
-      const rockMesh = new THREE.Mesh(rockGeometry, rockMaterial);
 
       const coords = new THREE.Vector2(
         Math.floor(this.width * Math.random()),
@@ -144,8 +152,11 @@ export class World extends THREE.Group {
       );
 
       // Don't place objects on top of each other
-      if (this.#objectMap.has(`${coords.x}-${coords.y}`)) continue;
+      if (this.#objectMap.has(this.getKey(coords))) continue;
 
+      const rockGeometry = new THREE.SphereGeometry(radius, 6, 5);
+      const rockMesh = new THREE.Mesh(rockGeometry, rockMaterial);
+      rockMesh.name = `Rock-(${coords.x},${coords.y})`;
       rockMesh.position.set(
         coords.x + 0.5,
         0,
@@ -155,7 +166,7 @@ export class World extends THREE.Group {
       rockMesh.scale.y = height;
       this.rocks.add(rockMesh);
 
-      this.#objectMap.set(`${coords.x}-${coords.y}`, rockMesh);
+      this.#objectMap.set(this.getKey(coords), rockMesh);
     }
   }
 
@@ -170,8 +181,6 @@ export class World extends THREE.Group {
 
     for (let i = 0; i < this.bushCount; i++) {
       const radius = minBushRadius + (Math.random() * (maxBushRadius - minBushRadius));
-      const bushGeometry = new THREE.SphereGeometry(radius, 8, 8);
-      const bushMesh = new THREE.Mesh(bushGeometry, bushMaterial);
 
       const coords = new THREE.Vector2(
         Math.floor(this.width * Math.random()),
@@ -179,8 +188,11 @@ export class World extends THREE.Group {
       );
 
       // Don't place objects on top of each other
-      if (this.#objectMap.has(`${coords.x}-${coords.y}`)) continue;
+      if (this.#objectMap.has(this.getKey(coords))) continue;
 
+      const bushGeometry = new THREE.SphereGeometry(radius, 8, 8);
+      const bushMesh = new THREE.Mesh(bushGeometry, bushMaterial);
+      bushMesh.name = `Bush-(${coords.x},${coords.y})`;
       bushMesh.position.set(
         coords.x + 0.5,
         radius,
@@ -188,7 +200,16 @@ export class World extends THREE.Group {
       );
       this.bushes.add(bushMesh);
 
-      this.#objectMap.set(`${coords.x}-${coords.y}`, bushMesh);
+      this.#objectMap.set(this.getKey(coords), bushMesh);
     }
+  }
+
+  /**
+   * Returns the object at `coords` if one exists, otherwise returns null
+   * @param {THREE.Vector2} coords 
+   * @returns {object | null}
+   */
+  getObject(coords) {
+    return this.#objectMap.get(this.getKey(coords)) ?? null;
   }
 }
