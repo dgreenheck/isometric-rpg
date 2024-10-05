@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { search } from './pathfinding';
+import { Vector3 } from 'three';
 
 export class Player extends THREE.Mesh {
   /**
@@ -11,6 +12,11 @@ export class Player extends THREE.Mesh {
   pathIndex = 0;
   pathUpdater = null;
 
+  moveSpeed = 2; // Units per second
+  currentPosition = new Vector3();
+  targetPosition = new Vector3();
+  isMoving = false;
+
   constructor(camera, world) {
     super();
     this.geometry = new THREE.CapsuleGeometry(0.25, 0.5);
@@ -20,6 +26,9 @@ export class Player extends THREE.Mesh {
     this.camera = camera;
     this.world = world;
     window.addEventListener('mousedown', this.onMouseDown.bind(this));
+
+    this.currentPosition.copy(this.position);
+    this.targetPosition.copy(this.position);
   }
 
   /**
@@ -67,17 +76,37 @@ export class Player extends THREE.Mesh {
 
       // Trigger interval function to update player's position
       this.pathIndex = 0;
-      this.pathUpdater = setInterval(this.updatePosition.bind(this), 300);
+      this.updatePosition();
     }
   }
 
   updatePosition() {
-    if (this.pathIndex === this.path.length) {
-      clearInterval(this.pathUpdater);
+    if (this.pathIndex >= this.path.length) {
+      this.isMoving = false;
       return;
     }
 
-    const curr = this.path[this.pathIndex++];
-    this.position.set(curr.x + 0.5, 0.5, curr.y + 0.5);
+    const nextTile = this.path[this.pathIndex];
+    this.targetPosition.set(nextTile.x + 0.5, 0.5, nextTile.y + 0.5);
+    this.currentPosition.copy(this.position);
+    this.isMoving = true;
+  }
+
+  update(deltaTime) {
+    if (this.isMoving) {
+      const step = this.moveSpeed * deltaTime;
+      const distanceToTarget = this.currentPosition.distanceTo(this.targetPosition);
+
+      if (distanceToTarget > step) {
+        this.currentPosition.lerp(this.targetPosition, step / distanceToTarget);
+        this.position.copy(this.currentPosition);
+      } else {
+        this.position.copy(this.targetPosition);
+        this.currentPosition.copy(this.targetPosition);
+        this.isMoving = false;
+        this.pathIndex++;
+        this.updatePosition(); // Move to the next position in the path
+      }
+    }
   }
 }

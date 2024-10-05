@@ -38,8 +38,56 @@ const ambient = new THREE.AmbientLight();
 ambient.intensity = 0.5;
 scene.add(ambient);
 
-function animate() {
-  controls.update();
+// Add these new variables for camera control
+let cameraAngle = 0;
+let cameraHeight = 2;
+const cameraDistance = 5;
+const rotationSpeed = 0.02;
+const heightChangeSpeed = 0.05;
+
+// Add this function to handle key presses
+const keysPressed = {};
+window.addEventListener('keydown', (event) => {
+  keysPressed[event.key.toLowerCase()] = true;
+});
+window.addEventListener('keyup', (event) => {
+  keysPressed[event.key.toLowerCase()] = false;
+});
+
+let lastTime = 0;
+
+function animate(currentTime) {
+  const deltaTime = (currentTime - lastTime) / 1000; // Convert to seconds
+  lastTime = currentTime;
+
+  // Update camera angle based on key presses
+  if (keysPressed['a'] || keysPressed['arrowleft']) {
+    cameraAngle -= rotationSpeed;
+  }
+  if (keysPressed['d'] || keysPressed['arrowright']) {
+    cameraAngle += rotationSpeed;
+  }
+  if (keysPressed['w'] || keysPressed['arrowup']) {
+    cameraHeight = Math.min(cameraHeight + heightChangeSpeed, 10);
+  }
+  if (keysPressed['s'] || keysPressed['arrowdown']) {
+    cameraHeight = Math.max(cameraHeight - heightChangeSpeed, 1);
+  }
+
+  // Calculate camera position
+  const playerPosition = player.position;
+  const cameraX = playerPosition.x + Math.sin(cameraAngle) * cameraDistance;
+  const cameraZ = playerPosition.z + Math.cos(cameraAngle) * cameraDistance;
+
+  camera.position.set(
+    cameraX,
+    playerPosition.y + cameraHeight,
+    cameraZ
+  );
+  camera.lookAt(playerPosition);
+
+  player.update(deltaTime);
+
   renderer.render(scene, camera);
   stats.update();
 }
