@@ -25,48 +25,43 @@ const createCharacter = (initialPosition, world, options = {}) => {
     pathIndex: 0
   };
 
-  const updatePosition = (currentState, newTargetPosition, newPath = []) => ({
-    ...currentState,
-    targetPosition: newTargetPosition,
-    isMoving: true,
-    path: newPath,
-    pathIndex: 0
-  });
-
-  const findPath = (start, end) => {
-    const startCoords = new THREE.Vector2(Math.floor(start.x), Math.floor(start.z));
-    const endCoords = new THREE.Vector2(Math.floor(end.x), Math.floor(end.z));
-    return search(startCoords, endCoords, world);
+  const getTerrainHeight = (x, z) => {
+    const gridX = Math.floor(x);
+    const gridZ = Math.floor(z);
+    return world.heightMap && world.heightMap[gridZ] ? world.heightMap[gridZ][gridX] || 0 : 0;
   };
 
   const setTargetPosition = (currentState, newTargetPosition) => {
     const newState = { ...currentState };
 
-    // If the character is already moving, start pathfinding from the current target
-    const start = newState.isMoving
-      ? new Vector2(Math.floor(newState.targetPosition.x), Math.floor(newState.targetPosition.z))
-      : new Vector2(Math.floor(newState.currentPosition.x), Math.floor(newState.currentPosition.z));
+    // Determine the starting point for pathfinding
+    const start = currentState.isMoving
+      ? new Vector2(Math.floor(currentState.targetPosition.x), Math.floor(currentState.targetPosition.z))
+      : new Vector2(Math.floor(currentState.currentPosition.x), Math.floor(currentState.currentPosition.z));
 
     const goal = new Vector2(Math.floor(newTargetPosition.x), Math.floor(newTargetPosition.z));
     const searchResult = search(start, goal, newState.world);
 
-    // If a valid path is found, update the state with the new path
     if (searchResult && searchResult.length > 0) {
       newState.finalTargetPosition = newTargetPosition;
       newState.path = searchResult;
       newState.pathIndex = 0;
       newState.isMoving = true;
-      newState.targetPosition = new Vector3(newState.path[0].x + 0.5, 0.5, newState.path[0].y + 0.5);
+      const nextPoint = newState.path[0];
+      newState.targetPosition = new Vector3(
+        nextPoint.x + 0.5,
+        getTerrainHeight(nextPoint.x + 0.5, nextPoint.y + 0.5) + 0.5,
+        nextPoint.y + 0.5
+      );
     } else {
-      // If no valid path is found, continue with the current path if moving
       if (newState.isMoving) {
-        // Keep the current path and target
         console.log("Invalid target selected. Continuing to previous destination.");
+        // Keep the current path and target
       } else {
-        // If not moving, clear the path and stop
-        newState.path = [];
+        console.log("No valid path found.");
         newState.isMoving = false;
-        newState.targetPosition = new Vector3(newState.currentPosition.x, 0.5, newState.currentPosition.z);
+        newState.path = [];
+        newState.targetPosition = new Vector3(newState.currentPosition.x, newState.currentPosition.y, newState.currentPosition.z);
       }
     }
 
@@ -81,33 +76,31 @@ const createCharacter = (initialPosition, world, options = {}) => {
       const step = direction.multiplyScalar(newState.moveSpeed * deltaTime);
       const newPosition = new Vector3().addVectors(newState.currentPosition, step);
 
+      // Smoothly interpolate the Y position
+      const targetHeight = getTerrainHeight(newPosition.x, newPosition.z) + 0.5;
+      const heightDifference = targetHeight - newPosition.y;
+      const smoothingFactor = 5; // Adjust this value to control smoothness
+      newPosition.y += heightDifference * Math.min(smoothingFactor * deltaTime, 1);
+
       // Check if we've reached or overshot the target
       if (newPosition.distanceTo(newState.targetPosition) <= step.length()) {
-        // Snap to the center of the current tile
-        newState.currentPosition.set(
-          Math.floor(newState.targetPosition.x) + 0.5,
-          0.5,
-          Math.floor(newState.targetPosition.z) + 0.5
-        );
+        newState.currentPosition.copy(newState.targetPosition);
         mesh.position.copy(newState.currentPosition);
 
         if (newState.pathIndex < newState.path.length - 1) {
           // Move to the next tile in the path
           newState.pathIndex++;
+          const nextPoint = newState.path[newState.pathIndex];
           newState.targetPosition.set(
-            newState.path[newState.pathIndex].x + 0.5,
-            0.5,
-            newState.path[newState.pathIndex].y + 0.5
+            nextPoint.x + 0.5,
+            getTerrainHeight(nextPoint.x + 0.5, nextPoint.y + 0.5) + 0.5,
+            nextPoint.y + 0.5
           );
         } else {
-          // If we've reached the end of the path, ensure we're at the center of the tile
+          // If we've reached the end of the path
           newState.isMoving = false;
-          newState.currentPosition.set(
-            Math.floor(newState.currentPosition.x) + 0.5,
-            0.5,
-            Math.floor(newState.currentPosition.z) + 0.5
-          );
-          mesh.position.copy(newState.currentPosition);
+          newState.path = [];
+          newState.pathIndex = 0;
         }
       } else {
         newState.currentPosition.copy(newPosition);
@@ -128,7 +121,7 @@ const createCharacter = (initialPosition, world, options = {}) => {
       state = setTargetPosition(state, newTargetPosition);
     },
     isMoving: () => state.isMoving,
-    getPath: () => state.path  // Add this line
+    getPath: () => state.path
   };
 };
 

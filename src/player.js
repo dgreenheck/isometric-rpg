@@ -2,12 +2,17 @@ import * as THREE from 'three';
 import { Vector3 } from 'three';
 import { createCharacter } from './character';
 
-const createPlayer = (camera, world) => {
-  const initialPosition = new Vector3(1.5, 0.5, 5.5);
+const createPlayer = (camera, world, playerConfig = {}) => {
+  
+  const initialX = playerConfig.initialPosition.x;
+  const initialZ = playerConfig.initialPosition.z;
+  const terrainHeight = world.heightMap[Math.floor(initialZ)][Math.floor(initialX)];
+  const initialPosition = new Vector3(initialX, terrainHeight + 0.5, initialZ);
+
   const playerOptions = {
     geometry: new THREE.CapsuleGeometry(0.25, 0.5),
     material: new THREE.MeshStandardMaterial({ color: 0x4040c0 }),
-    moveSpeed: 2,
+    moveSpeed: playerConfig.moveSpeed,
     usePathfinding: true
   };
 
@@ -27,7 +32,8 @@ const createPlayer = (camera, world) => {
         new THREE.SphereGeometry(0.1),
         new THREE.MeshBasicMaterial({ color: 0xffff00 })
       );
-      node.position.set(coords.x + 0.5, 0.1, coords.y + 0.5);
+      const terrainHeight = world.heightMap[Math.floor(coords.y)][Math.floor(coords.x)];
+      node.position.set(coords.x + 0.5, terrainHeight + 0.1, coords.y + 0.5);
       pathNodeCache.set(key, node);
     }
     return pathNodeCache.get(key);
@@ -62,7 +68,8 @@ const createPlayer = (camera, world) => {
 
   const updateCamera = (position) => {
     camera.position.x = position.x;
-    camera.position.z = position.z + 5;
+    camera.position.y = position.y + playerConfig.cameraOffset.y;
+    camera.position.z = position.z + playerConfig.cameraOffset.z;
     camera.lookAt(position);
   };
 

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createNoise2D } from 'simplex-noise';
 import { createTerrain } from './world/terrain';
 import { createTree } from './world/tree';
 import { createRock } from './world/rock';
@@ -36,11 +37,24 @@ const generateObjects = (width, height, count) => {
   return generateObject({ objects: [], occupiedPositions: new Set() });
 };
 
-const createAndPositionObject = ({ coords, type }) => {
+const generateHeightMap = (width, height) => {
+  const noise2D = createNoise2D();
+  const scale = 0.1;
+  const amplitude = 2;
+
+  return Array.from({ length: height }, (_, y) =>
+    Array.from({ length: width }, (_, x) =>
+      (noise2D(x * scale, y * scale) + 1) * 0.5 * amplitude
+    )
+  );
+};
+
+const createAndPositionObject = ({ coords, type }, heightMap) => {
   const object = createObjectFunctions[type](coords);
   const boundingBox = new THREE.Box3().setFromObject(object);
   const objectHeight = boundingBox.max.y - boundingBox.min.y;
-  object.position.set(coords.x + 0.5, objectHeight / 2, coords.y + 0.5);
+  const terrainHeight = heightMap[Math.floor(coords.y)][Math.floor(coords.x)];
+  object.position.set(coords.x + 0.5, terrainHeight + objectHeight / 2, coords.y + 0.5);
   return object;
 };
 
@@ -57,6 +71,7 @@ export class World extends THREE.Group {
     this.terrain = null;
     this.path = new THREE.Group();
     this.preGeneratedObjects = generateObjects(width, height, objectCount);
+    this.heightMap = generateHeightMap(width, height);
 
     this.generate();
   }
@@ -64,10 +79,10 @@ export class World extends THREE.Group {
   generate() {
     this.clear();
     
-    this.terrain = createTerrain(this.width, this.height);
+    this.terrain = createTerrain(this.width, this.height, this.heightMap);
     this.add(this.terrain);
 
-    const worldObjects = this.preGeneratedObjects.map(createAndPositionObject);
+    const worldObjects = this.preGeneratedObjects.map(obj => createAndPositionObject(obj, this.heightMap));
 
     this.add(...worldObjects);
     this.add(this.path);

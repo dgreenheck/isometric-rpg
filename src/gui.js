@@ -41,40 +41,61 @@ const createPlayMusicButton = () => {
   document.body.appendChild(button);
 };
 
-const createGUI = (world, updateWorld) => {
+const createGUI = (gameConfig, updateGame) => {
   const gui = new GUI();
-  const worldFolder = gui.addFolder('World');
+  
+  // Set GUI to be on top and prevent click-through
+  gui.domElement.style.zIndex = '1001';
+  gui.domElement.style.position = 'absolute';
+  gui.domElement.style.top = '0';
+  gui.domElement.style.right = '0';
 
-  const worldParams = {
-    width: world.width,
-    height: world.height,
-    seed: world.seed || 0,
-    octaves: world.octaves || 4,
-    persistence: world.persistence || 0.5,
-    lacunarity: world.lacunarity || 2.0,
-    exponentiation: world.exponentiation || 1,
-    heightMultiplier: world.heightMultiplier || 1,
-    waterThreshold: world.waterThreshold || 0
+  // Add event listener to stop propagation of mouse events
+  gui.domElement.addEventListener('mousedown', (event) => {
+    event.stopPropagation();
+  });
+
+  const addFolder = (name, params, path = '') => {
+    const folder = gui.addFolder(name);
+    Object.entries(params).forEach(([key, value]) => {
+      const newPath = path ? `${path}.${key}` : key;
+      if (typeof value === 'object' && !Array.isArray(value) && value !== null) {
+        addFolder(key, value, newPath);
+      } else {
+        folder.add(params, key).onChange((newValue) => {
+          updateGame(newPath, newValue);
+        });
+      }
+    });
   };
 
-  const addWorldControl = (property, min, max, step) => {
-    worldFolder.add(worldParams, property, min, max, step)
-      .name(property.charAt(0).toUpperCase() + property.slice(1))
-      .onChange((value) => {
-        if (world[property] !== undefined) {
-          world[property] = value;
-        }
-        updateWorld();
-      });
-  };
+  // Lights and Sky controls
+  const environmentFolder = gui.addFolder('Environment');
+  
+  // Sky and Sun controls
+  const skyFolder = environmentFolder.addFolder('Sky & Sun');
+  
+  skyFolder.add(gameConfig.sky, 'turbidity', 0, 20).onChange(value => updateGame('sky.turbidity', value));
+  skyFolder.add(gameConfig.sky, 'rayleigh', 0, 4).onChange(value => updateGame('sky.rayleigh', value));
+  skyFolder.add(gameConfig.sky, 'mieCoefficient', 0, 0.1).onChange(value => updateGame('sky.mieCoefficient', value));
+  skyFolder.add(gameConfig.sky, 'mieDirectionalG', 0, 1).onChange(value => updateGame('sky.mieDirectionalG', value));
+  skyFolder.add(gameConfig.sky, 'elevation', 0, 90).onChange(value => updateGame('sky.elevation', value));
+  skyFolder.add(gameConfig.sky, 'azimuth', 0, 360).onChange(value => updateGame('sky.azimuth', value));
+  skyFolder.add(gameConfig.sky, 'exposure', 0, 1).onChange(value => updateGame('sky.exposure', value));
 
-  ['width', 'height', 'seed', 'octaves', 'persistence', 'lacunarity', 'exponentiation', 'heightMultiplier', 'waterThreshold']
-    .forEach(prop => addWorldControl(prop, 0, prop === 'width' || prop === 'height' ? 20 : 10, 0.1));
+  // Sun light intensity
+  skyFolder.add(gameConfig.lights.sun, 'intensity', 0, 10).onChange((value) => {
+    updateGame('lights.sun.intensity', value);
+  });
 
-  worldFolder.add({ generate: () => {
-    Object.assign(world, worldParams);
-    world.generate();
-  }}, 'generate').name('Generate');
+  // Ambient light
+  const ambientFolder = environmentFolder.addFolder('Ambient Light');
+  ambientFolder.add(gameConfig.lights.ambient, 'intensity', 0, 1).onChange((value) => {
+    updateGame('lights.ambient.intensity', value);
+  });
+
+  addFolder('World', gameConfig.world, 'world');
+  addFolder('NPCs', gameConfig.npcs, 'npcs');
 
   createPlayMusicButton();
 

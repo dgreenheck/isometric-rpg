@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "howler": "^2.2.4",
+    "priorityqueuejs": "^2.0.0",
+    "simplex-noise": "^4.0.3",
     "three": "^0.167.1"
   },
   "devDependencies": {

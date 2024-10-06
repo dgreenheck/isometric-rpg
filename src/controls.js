@@ -30,12 +30,15 @@ const createCameraState = () => ({
   height: 2,
   distance: 5,
   rotationSpeed: 0.02,
-  heightChangeSpeed: 0.05
+  heightChangeSpeed: 0.05,
+  zoomSpeed: 0.1,
+  minZoom: 2,
+  maxZoom: 10
 });
 
 const updateCameraState = (cameraState, keysPressed) => {
-  if (keysPressed['a'] || keysPressed['arrowleft']) cameraState.angle += cameraState.rotationSpeed;
-  if (keysPressed['d'] || keysPressed['arrowright']) cameraState.angle -= cameraState.rotationSpeed;
+  if (keysPressed['a'] || keysPressed['arrowleft']) cameraState.angle -= cameraState.rotationSpeed;
+  if (keysPressed['d'] || keysPressed['arrowright']) cameraState.angle += cameraState.rotationSpeed;
   if (keysPressed['w'] || keysPressed['arrowup']) cameraState.height = Math.min(cameraState.height + cameraState.heightChangeSpeed, 10);
   if (keysPressed['s'] || keysPressed['arrowdown']) cameraState.height = Math.max(cameraState.height - cameraState.heightChangeSpeed, 1);
 };
@@ -50,11 +53,20 @@ const updateCameraPosition = (camera, player, cameraState) => {
   camera.lookAt(playerPosition);
 };
 
+const createMouseWheelHandler = (cameraState) => (event) => {
+  const zoomAmount = event.deltaY * cameraState.zoomSpeed * 0.01;
+  cameraState.distance = Math.max(
+    cameraState.minZoom,
+    Math.min(cameraState.maxZoom, cameraState.distance + zoomAmount)
+  );
+};
+
 export { 
   createControls, 
   createKeyHandler, 
   createResizeHandler, 
   createCameraState, 
   updateCameraState, 
-  updateCameraPosition 
+  updateCameraPosition,
+  createMouseWheelHandler
 };
