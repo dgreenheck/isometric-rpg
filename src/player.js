@@ -80,7 +80,12 @@ const createPlayer = (camera, world, playerConfig = {}) => {
       updateCamera(player.getPosition());
     },
     mesh: player.mesh,
-    getPosition: () => player.getPosition()
+    getPosition: () => player.getPosition(),
+    setPosition: (newPosition) => {
+      mesh.position.copy(newPosition);
+      state.currentPosition.copy(newPosition);
+      state.targetPosition.copy(newPosition);
+    }
   };
 };
 

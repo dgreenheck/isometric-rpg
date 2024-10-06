@@ -23,3 +23,6 @@
 - Start simple
 - Build layer by layer
 - Focus on gameplay first, graphics and polish and optimization come later
+
+Copyright (c) 2024 Daniel Greenheck
+Copyright (c) 2024 Robert Aron Zawiasa

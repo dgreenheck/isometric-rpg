@@ -76,7 +76,7 @@ const createCharacter = (initialPosition, world, options = {}) => {
       const step = direction.multiplyScalar(newState.moveSpeed * deltaTime);
       const newPosition = new Vector3().addVectors(newState.currentPosition, step);
 
-      // Smoothly interpolate the Y position
+      // Get the new terrain height at the new position
       const targetHeight = getTerrainHeight(newPosition.x, newPosition.z) + 0.5;
       const heightDifference = targetHeight - newPosition.y;
       const smoothingFactor = 5; // Adjust this value to control smoothness
@@ -85,6 +85,7 @@ const createCharacter = (initialPosition, world, options = {}) => {
       // Check if we've reached or overshot the target
       if (newPosition.distanceTo(newState.targetPosition) <= step.length()) {
         newState.currentPosition.copy(newState.targetPosition);
+        newState.currentPosition.y = getTerrainHeight(newState.targetPosition.x, newState.targetPosition.z) + 0.5;
         mesh.position.copy(newState.currentPosition);
 
         if (newState.pathIndex < newState.path.length - 1) {

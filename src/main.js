@@ -43,7 +43,15 @@ const gameConfig = {
     azimuth: 90,
     exposure: 1
   },
-  world: { width: 100, height: 100 },
+  world: { 
+    width: 100, 
+    height: 100,
+    objects: {
+      trees: 250,
+      rocks: 150,
+      bushes: 100
+    }
+  },
   npcs: { count: 5 },
   defaultPlayerConfig: {
     initialPosition: { x: 40.5, z: 60.5 },
@@ -130,7 +138,7 @@ class Game {
   }
 
   createWorld() {
-    this.world = new World(gameConfig.world.width, gameConfig.world.height);
+    this.world = new World(gameConfig.world);
     this.scene.add(this.world);
   }
 
@@ -213,6 +221,7 @@ class Game {
         this.updateLights(updatePath[1], updatePath[2], value);
         break;
       case 'world':
+        // Update the world for any change in the world config
         this.updateWorld();
         break;
       case 'npcs':
@@ -260,9 +269,21 @@ class Game {
   }
 
   updateWorld() {
-    this.scene.remove(this.world);
-    this.world = new World(gameConfig.world.width, gameConfig.world.height);
+    const oldWorld = this.world;
+    this.scene.remove(oldWorld);
+    this.world = new World(gameConfig.world);
     this.scene.add(this.world);
+
+    // Update player position
+    const playerPos = this.player.getPosition();
+    const newPlayerHeight = this.world.getTerrainHeight(playerPos.x, playerPos.z) + 0.5;
+    this.player.setPosition(new THREE.Vector3(playerPos.x, newPlayerHeight, playerPos.z));
+
+    // Update NPC positions
+    this.npcs.updatePositions(this.world);
+
+    // Update camera position
+    updateCameraPosition(this.camera, this.player, this.cameraState);
   }
 
   updateNPCs(property, value) {

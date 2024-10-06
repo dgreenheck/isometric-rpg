@@ -94,7 +94,7 @@ const createGUI = (gameConfig, updateGame) => {
     updateGame('lights.ambient.intensity', value);
   });
 
-  addFolder('World', gameConfig.world, 'world');
+  // addFolder('World', gameConfig.world, 'world'); doesn't work properly because of the heightmap
   addFolder('NPCs', gameConfig.npcs, 'npcs');
 
   createPlayMusicButton();

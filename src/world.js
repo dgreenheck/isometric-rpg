@@ -6,9 +6,9 @@ import { createRock } from './world/rock';
 import { createBush } from './world/bush';
 
 const createObjectFunctions = {
-  tree: createTree,
-  rock: createRock,
-  bush: createBush
+  trees: createTree,
+  rocks: createRock,
+  bushes: createBush
 };
 
 const objectTypes = Object.keys(createObjectFunctions);
@@ -50,7 +50,8 @@ const generateHeightMap = (width, height) => {
 };
 
 const createAndPositionObject = ({ coords, type }, heightMap) => {
-  const object = createObjectFunctions[type](coords);
+  const createFunction = createObjectFunctions[type];
+  const object = createFunction(coords);
   const boundingBox = new THREE.Box3().setFromObject(object);
   const objectHeight = boundingBox.max.y - boundingBox.min.y;
   const terrainHeight = heightMap[Math.floor(coords.y)][Math.floor(coords.x)];
@@ -63,17 +64,29 @@ const createObjectMap = (objects) => new Map(
 );
 
 export class World extends THREE.Group {
-  constructor(width, height, objectCount = 40) {
+  constructor(config) {
     super();
-    this.width = width;
-    this.height = height;
-    this.objectCount = objectCount;
+    this.width = config.width;
+    this.height = config.height;
+    this.objectCount = Object.values(config.objects).reduce((sum, count) => sum + count, 0);
+    this.objectConfig = config.objects;
     this.terrain = null;
     this.path = new THREE.Group();
-    this.preGeneratedObjects = generateObjects(width, height, objectCount);
-    this.heightMap = generateHeightMap(width, height);
+    this.preGeneratedObjects = this.generateObjects();
+    this.heightMap = generateHeightMap(this.width, this.height);
 
     this.generate();
+  }
+
+  generateObjects() {
+    const objects = [];
+    for (const [type, count] of Object.entries(this.objectConfig)) {
+      for (let i = 0; i < count; i++) {
+        const { coords, key } = generateUniqueCoords(this.width, this.height, new Set(objects.map(obj => `${obj.coords.x}-${obj.coords.y}`)));
+        objects.push({ coords, type });
+      }
+    }
+    return objects;
   }
 
   generate() {
