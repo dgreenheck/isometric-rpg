@@ -14,6 +14,7 @@ import { createPlayer } from './player';
 import { createNPCs } from './npc';
 import { createGUI } from './gui';
 import { Sky } from 'three/addons/objects/Sky.js';
+import { Clouds } from './world/clouds';
 
 const gameConfig = {
   renderer: {
@@ -32,14 +33,14 @@ const gameConfig = {
       intensity: 0.8,
       position: { x: 1, y: 0.1, z: 0 }
     },
-    ambient: { intensity: 3 }
+    ambient: { intensity: 1 }
   },
   sky: {
     turbidity: 0.5,
     rayleigh: 0.5,
     mieCoefficient: 0.005,
     mieDirectionalG: 0.85,
-    elevation: 65,
+    elevation: 2.79,
     azimuth: 90,
     exposure: 1
   },
@@ -75,6 +76,7 @@ class Game {
     this.sky = null;
     this.sunLight = null;
     this.gui = null;
+    this.clouds = null;
   }
 
   init() {
@@ -92,6 +94,7 @@ class Game {
     this.createGUI();
     this.setupEventListeners();
     this.startAnimationLoop();
+    this.createClouds();
   }
 
   createRenderer() {
@@ -193,6 +196,9 @@ class Game {
     this.player.update(deltaTime);
     this.npcs.update(deltaTime);
     updateCameraPosition(this.camera, this.player, this.cameraState);
+    if (this.clouds) {
+      this.clouds.update(deltaTime);
+    }
   }
 
   render() {
@@ -284,6 +290,12 @@ class Game {
 
     // Update camera position
     updateCameraPosition(this.camera, this.player, this.cameraState);
+
+    // Update clouds
+    if (this.clouds) {
+      this.scene.remove(this.clouds.clouds);
+    }
+    this.createClouds();
   }
 
   updateNPCs(property, value) {
@@ -323,6 +335,10 @@ class Game {
       this.sky.material.uniforms['sunPosition'].value.copy(sunPosition);
       this.sunLight.position.copy(sunPosition);
     }
+  }
+
+  createClouds() {
+    this.clouds = new Clouds(this.scene, { width: gameConfig.world.width, height: gameConfig.world.height });
   }
 }
 

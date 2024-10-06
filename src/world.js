@@ -39,13 +39,45 @@ const generateObjects = (width, height, count) => {
 
 const generateHeightMap = (width, height) => {
   const noise2D = createNoise2D();
-  const scale = 0.1;
-  const amplitude = 2;
+  const baseScale = 0.05;
+  const baseAmplitude = 2;
+
+  const octaves = 4;
+  const persistence = 0.5;
+  const lacunarity = 2.0;
 
   return Array.from({ length: height }, (_, y) =>
-    Array.from({ length: width }, (_, x) =>
-      (noise2D(x * scale, y * scale) + 1) * 0.5 * amplitude
-    )
+    Array.from({ length: width }, (_, x) => {
+      let elevation = 0;
+      let frequency = baseScale;
+      let amplitude = baseAmplitude;
+
+      for (let i = 0; i < octaves; i++) {
+        const sampleX = x * frequency;
+        const sampleY = y * frequency;
+        const noiseValue = noise2D(sampleX, sampleY);
+        elevation += noiseValue * amplitude;
+
+        amplitude *= persistence;
+        frequency *= lacunarity;
+      }
+
+      // Normalize and add some interesting features
+      elevation = (elevation + baseAmplitude) / (2 * baseAmplitude);
+      
+      // Create some peaks
+      const distanceToCenter = Math.sqrt(Math.pow(x - width / 2, 2) + Math.pow(y - height / 2, 2));
+      const peakFactor = Math.max(0, 1 - distanceToCenter / (Math.min(width, height) / 3));
+      elevation += peakFactor * peakFactor * 2;
+
+      // Add some valleys
+      const valleyNoise = noise2D(x * 0.02, y * 0.02);
+      if (valleyNoise < -0.7) {
+        elevation *= 0.3 + 0.7 * (valleyNoise + 1);
+      }
+
+      return elevation * baseAmplitude;
+    })
   );
 };
 
@@ -55,7 +87,14 @@ const createAndPositionObject = ({ coords, type }, heightMap) => {
   const boundingBox = new THREE.Box3().setFromObject(object);
   const objectHeight = boundingBox.max.y - boundingBox.min.y;
   const terrainHeight = heightMap[Math.floor(coords.y)][Math.floor(coords.x)];
-  object.position.set(coords.x + 0.5, terrainHeight + objectHeight / 2, coords.y + 0.5);
+  
+  // Adjust the y-position to place the object on top of the terrain
+  object.position.set(
+    coords.x + 0.5, 
+    terrainHeight, 
+    coords.y + 0.5
+  );
+  
   return object;
 };
 
