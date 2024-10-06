@@ -1,112 +1,80 @@
 import * as THREE from 'three';
-import { search } from './pathfinding';
 import { Vector3 } from 'three';
+import { createCharacter } from './character';
 
-export class Player extends THREE.Mesh {
-  /**
-   * @type {THREE.Raycaster}
-   */
-  raycaster = new THREE.Raycaster();
+const createPlayer = (camera, world) => {
+  const initialPosition = new Vector3(1.5, 0.5, 5.5);
+  const playerOptions = {
+    geometry: new THREE.CapsuleGeometry(0.25, 0.5),
+    material: new THREE.MeshStandardMaterial({ color: 0x4040c0 }),
+    moveSpeed: 2,
+    usePathfinding: true
+  };
 
-  path = [];
-  pathIndex = 0;
-  pathUpdater = null;
+  const player = createCharacter(initialPosition, world, playerOptions);
 
-  moveSpeed = 2; // Units per second
-  currentPosition = new Vector3();
-  targetPosition = new Vector3();
-  isMoving = false;
+  // Pre-create reusable objects
+  const raycaster = new THREE.Raycaster();
+  const mouseCoords = new THREE.Vector2();
+  const targetPosition = new Vector3();
 
-  constructor(camera, world) {
-    super();
-    this.geometry = new THREE.CapsuleGeometry(0.25, 0.5);
-    this.material = new THREE.MeshStandardMaterial({ color: 0x4040c0 });
-    this.position.set(1.5, 0.5, 5.5);
+  // Memoize path node creation
+  const pathNodeCache = new Map();
+  const getPathNode = (coords) => {
+    const key = `${coords.x},${coords.y}`;
+    if (!pathNodeCache.has(key)) {
+      const node = new THREE.Mesh(
+        new THREE.SphereGeometry(0.1),
+        new THREE.MeshBasicMaterial({ color: 0xffff00 })
+      );
+      node.position.set(coords.x + 0.5, 0.1, coords.y + 0.5);
+      pathNodeCache.set(key, node);
+    }
+    return pathNodeCache.get(key);
+  };
 
-    this.camera = camera;
-    this.world = world;
-    window.addEventListener('mousedown', this.onMouseDown.bind(this));
+  const visualizePath = (path, world) => {
+    world.path.clear();
+    if (path && path.length > 0) {
+      path.forEach((coords) => {
+        world.path.add(getPathNode(coords));
+      });
+    }
+  };
 
-    this.currentPosition.copy(this.position);
-    this.targetPosition.copy(this.position);
-  }
-
-  /**
-   * 
-   * @param {MouseEvent} event 
-   */
-  onMouseDown(event) {
-    const coords = new THREE.Vector2(
+  const onMouseDown = (event) => {
+    mouseCoords.set(
       (event.clientX / window.innerWidth) * 2 - 1,
-      - (event.clientY / window.innerHeight) * 2 + 1
+      -(event.clientY / window.innerHeight) * 2 + 1
     );
 
-    this.raycaster.setFromCamera(coords, this.camera);
-    const intersections = this.raycaster.intersectObject(this.world.terrain);
+    raycaster.setFromCamera(mouseCoords, camera);
+    const intersections = raycaster.intersectObject(world.terrain);
 
     if (intersections.length > 0) {
-      const playerCoords = new THREE.Vector2(
-        Math.floor(this.position.x),
-        Math.floor(this.position.z)
-      );
-
-      const selectedCoords = new THREE.Vector2(
-        Math.floor(intersections[0].point.x),
-        Math.floor(intersections[0].point.z)
-      );
-
-      this.world.path.clear();
-      clearInterval(this.pathUpdater);
-
-      // Find path from player's current position to the selected square
-      this.path = search(playerCoords, selectedCoords, this.world);
-
-      // If no path found, return early
-      if (this.path === null || this.path.length === 0) return;
-
-      // DEBUG: Show the path as breadcrumbs
-      this.path.forEach((coords) => {
-        const node = new THREE.Mesh(
-          new THREE.SphereGeometry(0.1),
-          new THREE.MeshBasicMaterial()
-        );
-        node.position.set(coords.x + 0.5, 0, coords.y + 0.5);
-        this.world.path.add(node);
-      });
-
-      // Trigger interval function to update player's position
-      this.pathIndex = 0;
-      this.updatePosition();
+      targetPosition.set(intersections[0].point.x, 0.5, intersections[0].point.z);
+      player.setTargetPosition(targetPosition);
+      visualizePath(player.getPath(), world);
     }
-  }
+  };
 
-  updatePosition() {
-    if (this.pathIndex >= this.path.length) {
-      this.isMoving = false;
-      return;
-    }
+  window.addEventListener('mousedown', onMouseDown);
 
-    const nextTile = this.path[this.pathIndex];
-    this.targetPosition.set(nextTile.x + 0.5, 0.5, nextTile.y + 0.5);
-    this.currentPosition.copy(this.position);
-    this.isMoving = true;
-  }
+  const updateCamera = (position) => {
+    camera.position.x = position.x;
+    camera.position.z = position.z + 5;
+    camera.lookAt(position);
+  };
 
-  update(deltaTime) {
-    if (this.isMoving) {
-      const step = this.moveSpeed * deltaTime;
-      const distanceToTarget = this.currentPosition.distanceTo(this.targetPosition);
+  return {
+    ...player,
+    update: (deltaTime) => {
+      player.update(deltaTime);
+      updateCamera(player.getPosition());
+    },
+    mesh: player.mesh,
+    getPosition: () => player.getPosition()
+  };
+};
 
-      if (distanceToTarget > step) {
-        this.currentPosition.lerp(this.targetPosition, step / distanceToTarget);
-        this.position.copy(this.currentPosition);
-      } else {
-        this.position.copy(this.targetPosition);
-        this.currentPosition.copy(this.targetPosition);
-        this.isMoving = false;
-        this.pathIndex++;
-        this.updatePosition(); // Move to the next position in the path
-      }
-    }
-  }
-}
+export { createPlayer };

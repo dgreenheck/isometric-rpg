@@ -1,108 +1,127 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { 
+  createControls, 
+  createKeyHandler, 
+  createResizeHandler, 
+  createCameraState, 
+  updateCameraState, 
+  updateCameraPosition 
+} from './controls';
 import Stats from 'three/addons/libs/stats.module.js';
-import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import { World } from './world';
-import { Player } from './player';
+import { createPlayer } from './player';
+import { createNPCs } from './npc';
+import { createGUI } from './gui';
 
-const gui = new GUI();
+const gameConfig = {
+  renderer: {
+    size: { width: window.innerWidth, height: window.innerHeight },
+    pixelRatio: devicePixelRatio
+  },
+  camera: {
+    fov: 75,
+    aspect: window.innerWidth / window.innerHeight,
+    near: 0.1,
+    far: 1000,
+    position: { x: 0, y: 2, z: 0 }
+  },
+  lights: {
+    sun: { intensity: 3, position: { x: 1, y: 2, z: 3 } },
+    ambient: { intensity: 0.5 }
+  },
+  world: { width: 10, height: 20 },
+  npcs: { count: 5 }
+};
 
-const stats = new Stats()
-document.body.appendChild(stats.dom)
+const createRenderer = (config) => {
+  const renderer = new THREE.WebGLRenderer();
+  renderer.setSize(config.size.width, config.size.height);
+  renderer.setPixelRatio(config.pixelRatio);
+  document.body.appendChild(renderer.domElement);
+  return renderer;
+};
 
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setAnimationLoop(animate);
-renderer.setPixelRatio(devicePixelRatio);
-document.body.appendChild(renderer.domElement);
+const createScene = () => new THREE.Scene();
 
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.target.set(5, 0, 5);
-camera.position.set(0, 2, 0);
-controls.update();
+const createCamera = (config) => {
+  const camera = new THREE.PerspectiveCamera(config.fov, config.aspect, config.near, config.far);
+  camera.position.set(config.position.x, config.position.y, config.position.z);
+  return camera;
+};
 
-const world = new World(10, 10);
-scene.add(world);
-
-const player = new Player(camera, world);
-scene.add(player);
-
-const sun = new THREE.DirectionalLight();
-sun.intensity = 3;
-sun.position.set(1, 2, 3);
-scene.add(sun);
-
-const ambient = new THREE.AmbientLight();
-ambient.intensity = 0.5;
-scene.add(ambient);
-
-// Add these new variables for camera control
-let cameraAngle = 0;
-let cameraHeight = 2;
-const cameraDistance = 5;
-const rotationSpeed = 0.02;
-const heightChangeSpeed = 0.05;
-
-// Add this function to handle key presses
-const keysPressed = {};
-window.addEventListener('keydown', (event) => {
-  keysPressed[event.key.toLowerCase()] = true;
-});
-window.addEventListener('keyup', (event) => {
-  keysPressed[event.key.toLowerCase()] = false;
-});
-
-let lastTime = 0;
-
-function animate(currentTime) {
-  const deltaTime = (currentTime - lastTime) / 1000; // Convert to seconds
-  lastTime = currentTime;
-
-  // Update camera angle based on key presses
-  if (keysPressed['a'] || keysPressed['arrowleft']) {
-    cameraAngle -= rotationSpeed;
-  }
-  if (keysPressed['d'] || keysPressed['arrowright']) {
-    cameraAngle += rotationSpeed;
-  }
-  if (keysPressed['w'] || keysPressed['arrowup']) {
-    cameraHeight = Math.min(cameraHeight + heightChangeSpeed, 10);
-  }
-  if (keysPressed['s'] || keysPressed['arrowdown']) {
-    cameraHeight = Math.max(cameraHeight - heightChangeSpeed, 1);
-  }
-
-  // Calculate camera position
-  const playerPosition = player.position;
-  const cameraX = playerPosition.x + Math.sin(cameraAngle) * cameraDistance;
-  const cameraZ = playerPosition.z + Math.cos(cameraAngle) * cameraDistance;
-
-  camera.position.set(
-    cameraX,
-    playerPosition.y + cameraHeight,
-    cameraZ
-  );
-  camera.lookAt(playerPosition);
-
-  player.update(deltaTime);
-
-  renderer.render(scene, camera);
-  stats.update();
-}
-
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+const createLights = (config) => ({
+  sun: (() => {
+    const sun = new THREE.DirectionalLight();
+    sun.intensity = config.sun.intensity;
+    sun.position.set(config.sun.position.x, config.sun.position.y, config.sun.position.z);
+    return sun;
+  })(),
+  ambient: (() => {
+    const ambient = new THREE.AmbientLight();
+    ambient.intensity = config.ambient.intensity;
+    return ambient;
+  })()
 });
 
-const worldFolder = gui.addFolder('World');
-worldFolder.add(world, 'width', 1, 20, 1).name('Width');
-worldFolder.add(world, 'height', 1, 20, 1).name('Height');
-worldFolder.add(world, 'treeCount', 1, 100, 1).name('Tree Count');
-worldFolder.add(world, 'rockCount', 1, 100, 1).name('Rock Count');
-worldFolder.add(world, 'bushCount', 1, 100, 1).name('Bush Count');
+const createAnimationLoop = (renderer, scene, camera, player, stats, cameraState, keysPressed, npcs) => {
+  let lastTime = 0;
 
-worldFolder.add(world, 'generate').name('Generate');
+  const updateGame = (deltaTime) => {
+    updateCameraState(cameraState, keysPressed);
+    player.update(deltaTime);
+    npcs.update(deltaTime);
+    updateCameraPosition(camera, player, cameraState);
+  };
+
+  const renderFrame = () => {
+    renderer.render(scene, camera);
+    stats.update();
+  };
+
+  return (currentTime) => {
+    const deltaTime = (currentTime - lastTime) / 1000;
+    lastTime = currentTime;
+
+    updateGame(deltaTime);
+    renderFrame();
+  };
+};
+
+const initGame = () => {
+  const renderer = createRenderer(gameConfig.renderer);
+  const scene = createScene();
+  const camera = createCamera(gameConfig.camera);
+  const controls = createControls(camera, renderer);
+  const { sun, ambient } = createLights(gameConfig.lights);
+  scene.add(sun, ambient);
+
+  const world = new World(gameConfig.world.width, gameConfig.world.height);
+  scene.add(world);
+
+  const player = createPlayer(camera, world);
+  scene.add(player.mesh);
+
+  const npcs = createNPCs(gameConfig.npcs.count, world);
+  npcs.getMeshes().forEach(mesh => scene.add(mesh));
+
+  const stats = new Stats();
+  document.body.appendChild(stats.dom);
+
+  const keysPressed = createKeyHandler();
+  const cameraState = createCameraState();
+
+  const updateWorld = () => {
+    scene.remove(world);
+    world.generate();
+    scene.add(world);
+  };
+
+  const gui = createGUI(world, updateWorld);
+
+  window.addEventListener('resize', createResizeHandler(camera, renderer));
+
+  const animate = createAnimationLoop(renderer, scene, camera, player, stats, cameraState, keysPressed, npcs);
+  renderer.setAnimationLoop(animate);
+};
+
+initGame();

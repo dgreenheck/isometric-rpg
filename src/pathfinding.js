@@ -1,82 +1,66 @@
 import * as THREE from 'three';
 
-class Node {
-  constructor(position, g = 0, h = 0) {
-    this.position = position;
-    this.g = g; // Cost from start to current node
-    this.h = h; // Heuristic (estimated cost from current node to goal)
-    this.f = g + h; // Total cost
-    this.parent = null;
-  }
-}
+// Pure function to create a node
+const createNode = (position, g = 0, h = 0, parent = null) => ({
+  position,
+  g,
+  h,
+  f: g + h,
+  parent
+});
 
-function heuristic(a, b) {
-  return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
-}
+// Pure function for heuristic calculation
+const heuristic = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 
-function getNeighbors(node, world) {
-  const neighbors = [];
+// Pure function to get neighbors
+const getNeighbors = (node, world) => {
   const directions = [
     { x: 0, y: 1 }, { x: 1, y: 0 }, { x: 0, y: -1 }, { x: -1, y: 0 },
     { x: 1, y: 1 }, { x: 1, y: -1 }, { x: -1, y: 1 }, { x: -1, y: -1 }
   ];
 
-  for (const dir of directions) {
-    const newPos = new THREE.Vector2(node.position.x + dir.x, node.position.y + dir.y);
-    
-    if (newPos.x >= 0 && newPos.x < world.width && newPos.y >= 0 && newPos.y < world.height) {
-      if (!world.getObject(newPos)) {
-        neighbors.push(newPos);
-      }
-    }
-  }
+  return directions
+    .map(dir => new THREE.Vector2(node.position.x + dir.x, node.position.y + dir.y))
+    .filter(newPos => 
+      newPos.x >= 0 && newPos.x < world.width && 
+      newPos.y >= 0 && newPos.y < world.height &&
+      !world.getObject(newPos)
+    );
+};
 
-  return neighbors;
-}
+// Helper function to reconstruct path
+const reconstructPath = (node) => 
+  node.parent ? [node.position, ...reconstructPath(node.parent)] : [node.position];
 
-export function search(start, goal, world) {
-  const openSet = new Set();
-  const closedSet = new Set();
-  const startNode = new Node(start, 0, heuristic(start, goal));
-  openSet.add(startNode);
+// Main search function
+export const search = (start, goal, world) => {
+  const startNode = createNode(start, 0, heuristic(start, goal));
+  
+  const searchStep = (openSet, closedSet) => {
+    if (openSet.length === 0) return null;
 
-  while (openSet.size > 0) {
-    let current = null;
-    for (const node of openSet) {
-      if (!current || node.f < current.f) {
-        current = node;
-      }
-    }
+    const current = openSet.reduce((min, node) => node.f < min.f ? node : min);
 
     if (current.position.equals(goal)) {
-      const path = [];
-      while (current) {
-        path.unshift(current.position);
-        current = current.parent;
-      }
-      return path;
+      return reconstructPath(current).reverse();
     }
 
-    openSet.delete(current);
-    closedSet.add(current);
+    const newOpenSet = openSet.filter(node => node !== current);
+    const newClosedSet = [...closedSet, current];
 
-    for (const neighborPos of getNeighbors(current, world)) {
-      if ([...closedSet].some(node => node.position.equals(neighborPos))) {
-        continue;
-      }
+    const neighbors = getNeighbors(current, world)
+      .filter(neighborPos => !newClosedSet.some(node => node.position.equals(neighborPos)))
+      .map(neighborPos => {
+        const gScore = current.g + 1;
+        const hScore = heuristic(neighborPos, goal);
+        return createNode(neighborPos, gScore, hScore, current);
+      })
+      .filter(neighbor => 
+        !newOpenSet.some(node => node.position.equals(neighbor.position) && node.g <= neighbor.g)
+      );
 
-      const gScore = current.g + 1; // Assume cost of 1 to move to any neighbor
-      const hScore = heuristic(neighborPos, goal);
-      const neighbor = new Node(neighborPos, gScore, hScore);
-      neighbor.parent = current;
+    return searchStep([...newOpenSet, ...neighbors], newClosedSet);
+  };
 
-      if ([...openSet].some(node => node.position.equals(neighborPos) && node.g <= gScore)) {
-        continue;
-      }
-
-      openSet.add(neighbor);
-    }
-  }
-
-  return null; // No path found
-}
+  return searchStep([startNode], []);
+};
