@@ -20,9 +20,7 @@ export class HumanPlayer extends Player {
        * Event handler when user clicks on the screen
        * @param {MouseEvent} event 
        */
-      function onMouseDown(event) {
-        console.log(event);
-
+      const onSceneClick = (event) => {
         const coords = new THREE.Vector2(
           (event.clientX / window.innerWidth) * 2 - 1,
           - (event.clientY / window.innerHeight) * 2 + 1
@@ -37,19 +35,14 @@ export class HumanPlayer extends Player {
             0,
             Math.floor(intersections[0].point.z)
           );
-          window.removeEventListener('mousedown', onMouseDownBound);
+          window.removeEventListener('mousedown', onSceneClick);
+          console.log('Player selected coordinates', selectedCoords);
           resolve(selectedCoords);
         }
       };
 
-      // Need to assign the bound function to a separate variable
-      // in order to remove this event listener later on. Using
-      // bind() results in a different function signature 
-      // each time that you use it.
-      const onMouseDownBound = onMouseDown.bind(this);
-
       // Wait for player to select a square
-      window.addEventListener('mousedown', onMouseDownBound);
+      window.addEventListener('mousedown', onSceneClick);
       console.log('Waiting for player to select a target square');
     });
   }

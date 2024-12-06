@@ -23,6 +23,13 @@ export class GameObject extends THREE.Mesh {
   maxHitPoints = 10;
 
   /**
+   * Callback triggered when the object is moved
+   * @param {THREE.Vector3} oldCoords 
+   * @param {THREE.Vector3} newCoords 
+   */
+  onMove = (oldCoords, newCoords) => { };
+
+  /**
    * @param {THREE.Vector3} coords 
    * @param {THREE.BufferGeometry} geometry
    * @param {THREE.Material} material
@@ -63,12 +70,18 @@ export class GameObject extends THREE.Mesh {
    * @param {THREE.Vector3} coords 
    */
   moveTo(coords) {
+    const oldCoords = this.coords;
+
     this.coords = coords;
     this.position.set(
       this.coords.x + 0.5,
       this.coords.y + 0.5,
       this.coords.z + 0.5
     )
+
+    if (this.onMove) {
+      this.onMove(oldCoords, this.coords);
+    }
   }
 
   updateHealthOverlay() {

@@ -20,14 +20,12 @@ export class World extends THREE.Group {
     this.rockCount = 20;
     this.bushCount = 10;
 
-    this.trees = new THREE.Group();
-    this.add(this.trees);
-
-    this.rocks = new THREE.Group();
-    this.add(this.rocks);
-
-    this.bushes = new THREE.Group();
-    this.add(this.bushes);
+    this.objects = new THREE.Group();
+    this.objects.players = new THREE.Group();
+    this.objects.props = new THREE.Group();
+    this.objects.add(this.objects.props);
+    this.objects.add(this.objects.players);
+    this.add(this.objects);
 
     this.path = new THREE.Group();
     this.add(this.path);
@@ -36,27 +34,26 @@ export class World extends THREE.Group {
   }
 
   generate() {
-    this.clear();
-    this.createTerrain();
-    this.createTrees();
-    this.createRocks();
-    this.createBushes();
+    this.#clear();
+    this.#createTerrain();
+    this.#createTrees();
+    this.#createRocks();
+    this.#createBushes();
   }
 
-  clear() {
+  #clear() {
     if (this.terrain) {
       this.terrain.geometry.dispose();
       this.terrain.material.dispose();
       this.remove(this.terrain);
     }
 
-    this.trees.clear();
-    this.rocks.clear();
-    this.bushes.clear();
+    this.objects.props.clear();
+    this.objects.players.clear();
     this.#objectMap.clear();
   }
 
-  createTerrain() {
+  #createTerrain() {
     gridTexture.repeat = new THREE.Vector2(this.width, this.height);
     gridTexture.wrapS = THREE.RepeatWrapping;
     gridTexture.wrapT = THREE.RepeatWrapping;
@@ -74,7 +71,7 @@ export class World extends THREE.Group {
     this.add(this.terrain);
   }
 
-  createTrees() {
+  #createTrees() {
     for (let i = 0; i < this.treeCount; i++) {
       const coords = new THREE.Vector3(
         Math.floor(this.width * Math.random()),
@@ -83,11 +80,11 @@ export class World extends THREE.Group {
       );
 
       const tree = new Tree(coords);
-      this.addObject(tree, coords, this.trees);
+      this.addObject(tree, 'props');
     }
   }
 
-  createRocks() {
+  #createRocks() {
     for (let i = 0; i < this.rockCount; i++) {
       const coords = new THREE.Vector3(
         Math.floor(this.width * Math.random()),
@@ -96,11 +93,11 @@ export class World extends THREE.Group {
       );
 
       const rock = new Rock(coords);
-      this.addObject(rock, coords, this.rocks);
+      this.addObject(rock, 'props');
     }
   }
 
-  createBushes() {
+  #createBushes() {
     for (let i = 0; i < this.bushCount; i++) {
       const coords = new THREE.Vector3(
         Math.floor(this.width * Math.random()),
@@ -109,7 +106,7 @@ export class World extends THREE.Group {
       );
 
       const bush = new Bush(coords);
-      this.addObject(bush, coords, this.bushes);
+      this.addObject(bush, 'props');
     }
   }
 
@@ -118,17 +115,32 @@ export class World extends THREE.Group {
    * an object already exists at those coordinates
    * @param {GameObject} object 
    * @param {THREE.Vector3} coords 
-   * @param {THREE.Group} group The group to add the object to
+   * @param {'props' | 'players'} group The group to add the object to
    * @returns 
    */
-  addObject(object, coords, group) {
+  addObject(object, group) {
     // Don't place objects on top of each other
-    if (this.#objectMap.has(getKey(coords))) {
+    if (this.#objectMap.has(getKey(object.coords))) {
       return false;
     }
 
-    group.add(object);
-    this.#objectMap.set(getKey(coords), object);
+    if (group === 'players') {
+      this.objects.players.add(object);
+    } else if (group === 'props') {
+      this.objects.props.add(object)
+    } else {
+      console.error(`Failed to add object - group '${group}' does not exist.`)
+    }
+
+    // Add event listener when object is moved
+    object.onMove = (oldCoords, newCoords) => {
+      console.log('Deleting ', oldCoords);
+      console.log('Setting ', newCoords);
+      this.#objectMap.delete(getKey(oldCoords));
+      this.#objectMap.set(getKey(newCoords), object);
+    }
+
+    this.#objectMap.set(getKey(object.coords), object);
 
     return true;
   }

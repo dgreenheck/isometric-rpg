@@ -29,9 +29,11 @@ scene.add(world);
 
 const player1 = new HumanPlayer(new THREE.Vector3(1, 0, 5), camera, world);
 scene.add(player1);
+world.addObject(player1, 'players');
 
 const player2 = new HumanPlayer(new THREE.Vector3(8, 0, 3), camera, world);
 scene.add(player2);
+world.addObject(player2, 'players');
 
 const combatManager = new CombatManager();
 combatManager.addPlayer(player1);
