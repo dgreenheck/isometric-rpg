@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { Player } from './players/Player';
 
 export class CombatManager {
@@ -25,6 +26,8 @@ export class CombatManager {
   async takeTurns() {
     while (true) {
       for (const player of this.players) {
+        player.material.color = new THREE.Color(0xffff00);
+
         let actionPerformed = false;
         do {
           const action = await player.requestAction();
@@ -36,6 +39,8 @@ export class CombatManager {
             alert('Cannot perform action, pick another action.');
           }
         } while (!actionPerformed)
+
+        player.material.color = new THREE.Color(0x0000ff);
       }
     }
   }

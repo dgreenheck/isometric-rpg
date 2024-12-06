@@ -67,9 +67,24 @@ export class HumanPlayer extends Player {
    * @returns {Promise<Action | null>}
    */
   async requestAction() {
-    console.log('Requesting action...');
-    const selectedAction = new MovementAction(this, this.world);
-    console.log(`Player ${this.name} selected action ${selectedAction.name}`);
-    return selectedAction;
+    const statusText = document.getElementById('status-text');
+    const actionContainer = document.getElementById('actions');
+
+    // Clear existing buttons
+    actionContainer.innerHTML = '';
+
+    statusText.innerText = "Please select an action...";
+
+    return new Promise((resolve) => {
+      this.getActions().forEach((action) => {
+        const button = document.createElement('button');
+        button.innerText = action.name;
+        button.onclick = () => {
+          statusText.innerText = "";
+          resolve(action);
+        };
+        actionContainer.appendChild(button);
+      });
+    });
   }
 }

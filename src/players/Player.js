@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { GameObject } from '../objects/GameObject';
 import { World } from '../world';
+import { Action, MovementAction, WaitAction } from '../actions';
 
 const geometry = new THREE.CapsuleGeometry(0.25, 0.5);
-const material = new THREE.MeshStandardMaterial({ color: 0x4040c0 });
 
 /**
  * Base player class that human and computer players derive from
@@ -18,10 +18,22 @@ export class Player extends GameObject {
    * @param {World} world 
    */
   constructor(coords, camera, world) {
+    const material = new THREE.MeshStandardMaterial({ color: 0x4040c0 });
     super(coords, geometry, material);
     this.moveTo(coords);
     this.camera = camera;
     this.world = world;
+  }
+
+  /**
+   * 
+   * @returns {Action[]}
+   */
+  getActions() {
+    return [
+      new MovementAction(this, this.world),
+      new WaitAction()
+    ];
   }
 
   /**

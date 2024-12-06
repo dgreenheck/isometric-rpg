@@ -8,11 +8,34 @@
     body {
       margin: 0;
     }
+
+    #ui {
+      background-color: rgba(0, 0, 0, 0.5);
+      position: absolute;
+      left: 0px;
+      right: 0px;
+      bottom: 0px;
+      height: 60px;
+      padding: 8px;
+    }
+
+    #status-text {
+      font-family: sans-serif;
+      position: relative;
+      color: white;
+    }
   </style>
 </head>
 
 <body>
   <script type="module" src="src/main.js"></script>
+
+  <div id="render-area">
+    <div id="ui">
+      <div id="status-text">Status text</div>
+      <div id="actions"></div>
+    </div>
+  </div>
 </body>
 
 </html>
