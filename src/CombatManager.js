@@ -23,7 +23,7 @@ export class CombatManager {
   /**
    * Main combat loop
    */
-  async takeTurns() {
+  async takeTurns(world) {
     while (true) {
       for (const player of this.players) {
         player.material.color = new THREE.Color(0xffff00);
@@ -31,9 +31,9 @@ export class CombatManager {
         let actionPerformed = false;
         do {
           const action = await player.requestAction();
-          if (await action.canPerform()) {
+          if (await action.canPerform(world)) {
             // Wait for the player to finish performing their action
-            await action.perform();
+            await action.perform(world);
             actionPerformed = true;
           } else {
             alert('Cannot perform action, pick another action.');

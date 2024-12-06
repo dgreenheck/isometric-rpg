@@ -4,18 +4,11 @@
 export class WaitAction {
   name = 'Wait';
 
-  /**
-   * Performs the action
-   */
-  async perform() {
+  async perform(world) {
     // Do nothing
   }
 
-  /**
-   * Returns true/false if the action can be performed
-   * @returns {Promise<boolean>}
-   */
-  async canPerform() {
+  async canPerform(world) {
     return true;
   }
 }

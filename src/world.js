@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Bush } from './objects/Bush';
 import { GameObject } from './objects/GameObject';
+import { HumanPlayer } from './players/HumanPlayer';
 import { Rock } from './objects/Rock';
 import { Tree } from './objects/Tree';
 import { getKey } from './utils';
@@ -35,6 +36,13 @@ export class World extends THREE.Group {
 
   generate() {
     this.#clear();
+
+    const player1 = new HumanPlayer(new THREE.Vector3(1, 0, 5), this);
+    this.addObject(player1, 'players');
+
+    const player2 = new HumanPlayer(new THREE.Vector3(8, 0, 3), this);
+    this.addObject(player2, 'players');
+
     this.#createTerrain();
     this.#createTrees();
     this.#createRocks();

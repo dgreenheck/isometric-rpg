@@ -14,16 +14,11 @@ export class Player extends GameObject {
   /**
    * Instantiates a new instance of the player
    * @param {THREE.Vector3} coords 
-   * @param {THREE.Camera} camera 
-   * @param {World} world 
    */
-  constructor(coords, camera, world) {
+  constructor(coords) {
     const material = new THREE.MeshStandardMaterial({ color: 0x4040c0 });
     super(coords, geometry, material);
     this.moveTo(coords);
-    this.camera = camera;
-    this.world = world;
-
     this.healthDisplay.visible = true;
   }
 
@@ -33,24 +28,26 @@ export class Player extends GameObject {
    */
   getActions() {
     return [
-      new MovementAction(this, this.world),
+      new MovementAction(this),
       new WaitAction()
     ];
   }
 
   /**
    * Wait for the player to choose a target square
+   * @param {World} world
    * @returns {Promise<Vector3 | null>}
    */
-  async getTargetSquare() {
+  async getTargetSquare(world) {
     return null;
   }
 
   /**
    * Wait for the player to choose a target GameObject
+   * @param {World} world
    * @returns {Promise<GameObject | null>}
    */
-  async getTargetObject() {
+  async getTargetObject(world) {
     return null;
   }
 

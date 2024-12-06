@@ -1,58 +1,25 @@
-import * as THREE from 'three';
 import { Player } from './Player';
-import { MovementAction } from '../actions/MovementAction';
+import RaycastingHelper from '../helpers/RaycastingHelper';
 
 export class HumanPlayer extends Player {
   name = 'HumanPlayer';
 
   /**
-   * @type {THREE.Raycaster}
-   */
-  raycaster = new THREE.Raycaster();
-
-  /**
    * Wait for the player to choose a target square
+   * @param {World} world
    * @returns {Promise<Vector3 | null>}
    */
-  async getTargetSquare() {
-    return new Promise((resolve) => {
-      /**
-       * Event handler when user clicks on the screen
-       * @param {MouseEvent} event 
-       */
-      const onSceneClick = (event) => {
-        const coords = new THREE.Vector2(
-          (event.clientX / window.innerWidth) * 2 - 1,
-          - (event.clientY / window.innerHeight) * 2 + 1
-        );
-
-        this.raycaster.setFromCamera(coords, this.camera);
-        const intersections = this.raycaster.intersectObject(this.world.terrain);
-
-        if (intersections.length > 0) {
-          const selectedCoords = new THREE.Vector3(
-            Math.floor(intersections[0].point.x),
-            0,
-            Math.floor(intersections[0].point.z)
-          );
-          window.removeEventListener('mousedown', onSceneClick);
-          console.log('Player selected coordinates', selectedCoords);
-          resolve(selectedCoords);
-        }
-      };
-
-      // Wait for player to select a square
-      window.addEventListener('mousedown', onSceneClick);
-      console.log('Waiting for player to select a target square');
-    });
+  async getTargetSquare(world) {
+    return RaycastingHelper.getSelectedCoords(world);
   }
 
   /**
    * Wait for the player to choose a target GameObject
+   * @param {World} world
    * @returns {Promise<GameObject | null>}
    */
-  async getTargetObject() {
-    return null;
+  async getTargetObject(world) {
+    return RaycastingHelper.getSelectedObject(world);
   }
 
   /**

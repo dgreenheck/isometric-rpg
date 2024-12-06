@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import Stats from 'three/addons/libs/stats.module.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import { World } from './world';
-import { HumanPlayer } from './players/HumanPlayer';
+import RaycastingHelper from './helpers/RaycastingHelper';
 import { CombatManager } from './CombatManager';
 
 const gui = new GUI();
@@ -24,20 +24,12 @@ controls.target.set(5, 0, 5);
 camera.position.set(0, 2, 0);
 controls.update();
 
+RaycastingHelper.initialize(camera);
+
 const world = new World(10, 10);
 scene.add(world);
 
-const player1 = new HumanPlayer(new THREE.Vector3(1, 0, 5), camera, world);
-scene.add(player1);
-world.addObject(player1, 'players');
-
-const player2 = new HumanPlayer(new THREE.Vector3(8, 0, 3), camera, world);
-scene.add(player2);
-world.addObject(player2, 'players');
-
 const combatManager = new CombatManager();
-combatManager.addPlayer(player1);
-combatManager.addPlayer(player2);
 
 const sun = new THREE.DirectionalLight();
 sun.intensity = 3;
@@ -68,4 +60,5 @@ worldFolder.add(world, 'rockCount', 1, 100, 1).name('Rock Count');
 worldFolder.add(world, 'bushCount', 1, 100, 1).name('Bush Count');
 worldFolder.add(world, 'generate').name('Generate');
 
-combatManager.takeTurns();
+world.objects.players.children.forEach((player) => combatManager.addPlayer(player));
+combatManager.takeTurns(world);

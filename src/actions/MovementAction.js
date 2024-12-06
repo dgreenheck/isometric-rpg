@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Action } from './Action';
 import { search } from '../pathfinding';
 import { GameObject } from '../objects/GameObject';
+import { World } from '../world';
 
 const breadcrumb = new THREE.Mesh(
   new THREE.SphereGeometry(0.1),
@@ -18,12 +19,15 @@ export class MovementAction extends Action {
   /**
    * @type {GameObject}
    */
-  constructor(source, world) {
+  constructor(source) {
     super(source);
-    this.world = world;
   }
 
-  async perform() {
+  /**
+   * Performs the action
+   * @param {World} world 
+   */
+  async perform(world) {
     return new Promise((resolve) => {
       function updateSourcePosition() {
         // If we reached the end of the path, then stop
@@ -32,7 +36,7 @@ export class MovementAction extends Action {
         // the combat manager
         if (this.pathIndex === this.path.length) {
           clearInterval(this.pathUpdater);
-          this.world.path.clear();
+          world.path.clear();
           resolve();
 
           // Otherwise, move source object to the next path node
@@ -49,7 +53,7 @@ export class MovementAction extends Action {
       this.path.forEach((coords) => {
         const node = breadcrumb.clone();
         node.position.set(coords.x + 0.5, 0, coords.z + 0.5);
-        this.world.path.add(node);
+        world.path.add(node);
       });
 
       // Trigger interval function to update player's position
@@ -58,16 +62,18 @@ export class MovementAction extends Action {
     });
   }
 
-  async canPerform() {
-    const selectedCoords = await this.source.getTargetSquare();
-
-    console.log('canPerform ', selectedCoords);
+  /**
+   * Returns true if the action can be performed
+   * @param {World} world 
+   */
+  async canPerform(world) {
+    const selectedCoords = await this.source.getTargetSquare(world);
 
     // Find path from player's current position to the selected square
     this.path = search(
       this.source.coords,
       selectedCoords,
-      this.world);
+      world);
 
     // Return true if a valid path was found
     return (this.path !== null && this.path.length > 0);
