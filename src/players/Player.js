@@ -23,6 +23,8 @@ export class Player extends GameObject {
     this.moveTo(coords);
     this.camera = camera;
     this.world = world;
+
+    this.healthDisplay.visible = true;
   }
 
   /**
