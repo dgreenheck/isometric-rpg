@@ -55,13 +55,14 @@ function animate() {
   stats.update();
 }
 
-/*
 window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.left = window.innerWidth / -2;
+  camera.right = window.innerWidth / 2;
+  camera.top = window.innerHeight / 2;
+  camera.bottom = window.innerHeight / -2;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
-*/
 
 const worldFolder = gui.addFolder('World');
 worldFolder.add(world, 'width', 1, 20, 1).name('Width');
