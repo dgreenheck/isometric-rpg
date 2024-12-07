@@ -38,9 +38,11 @@ export class World extends THREE.Group {
     this.#clear();
 
     const player1 = new HumanPlayer(new THREE.Vector3(1, 0, 5), this);
+    player1.name = 'Player 1';
     this.addObject(player1, 'players');
 
     const player2 = new HumanPlayer(new THREE.Vector3(8, 0, 3), this);
+    player2.name = 'Player 2';
     this.addObject(player2, 'players');
 
     this.#createTerrain();

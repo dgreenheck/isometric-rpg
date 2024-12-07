@@ -9,6 +9,6 @@ export class WaitAction {
   }
 
   async canPerform(world) {
-    return true;
+    return { value: true };
   }
 }

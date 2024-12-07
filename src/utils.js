@@ -1,5 +1,9 @@
 import * as THREE from 'three';
 
+export function setStatus(text) {
+  document.getElementById('status-text').innerText = text;
+}
+
 /**
  * @param {THREE.Vector3} coords 
  * @returns Returns the key for the object map given a set of coordinates

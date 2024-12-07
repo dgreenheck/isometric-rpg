@@ -2,14 +2,20 @@ import { Action } from './Action';
 import { World } from '../world';
 import { Player } from '../players/Player';
 import { GameObject } from '../objects/GameObject';
+import { setStatus } from '../utils';
 
-export class MeleeAttackAction extends Action {
-  name = 'Melee Attack';
+export class RangedAttackAction extends Action {
+  name = 'Ranged Attack';
 
   /**
    * @type {GameObject}
    */
   target;
+
+  /**
+   * @type {number}
+   */
+  maxDistance = 5;
 
   /**
    * 
@@ -52,7 +58,7 @@ export class MeleeAttackAction extends Action {
     // Get the distance to the target
     const distanceToTarget = this.target.coords.clone().sub(this.source.coords).length();
 
-    if (distanceToTarget > 1) {
+    if (distanceToTarget > this.maxDistance) {
       return {
         value: false,
         reason: 'Target is out of range.'

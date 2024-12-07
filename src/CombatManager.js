@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Player } from './players/Player';
+import { setStatus } from './utils';
 
 export class CombatManager {
   /**
@@ -30,15 +31,18 @@ export class CombatManager {
 
         player.material.color = new THREE.Color(0xffff00);
 
+        setStatus(`${player.name} turn, select an action`);
+
         let actionPerformed = false;
         do {
           const action = await player.requestAction();
-          if (await action.canPerform(world)) {
+          const result = await action.canPerform(world)
+          if (result.value) {
             // Wait for the player to finish performing their action
             await action.perform(world);
             actionPerformed = true;
           } else {
-            alert('Cannot perform action, pick another action.');
+            setStatus(result.reason);
           }
         } while (!actionPerformed)
 

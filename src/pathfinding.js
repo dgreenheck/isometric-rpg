@@ -14,8 +14,6 @@ export function search(start, end, world) {
   // If the end is equal to the start, skip searching
   if (start.equals(end)) return [];
 
-  console.log(`Searching for path from (${start.x},${start.z}) to (${end.x},${end.z})`);
-
   let pathFound = false;
   const maxSearchDistance = 20;
 
@@ -45,7 +43,6 @@ export function search(start, end, world) {
 
     // Did we find the end goal?
     if (candidate.equals(end)) {
-      console.log(`Path found (visited ${counter} candidates)`);
       pathFound = true;
       break;
     }

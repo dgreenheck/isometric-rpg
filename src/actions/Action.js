@@ -31,9 +31,9 @@ export class Action {
   /**
    * Returns true/false if the action can be performed
    * @param {World} world
-   * @returns {Promise<boolean>}
+   * @returns {Promise<{value: boolean, reason: string?}>}
    */
   async canPerform(world) {
-    return true;
+    return { value: true };
   }
 }
