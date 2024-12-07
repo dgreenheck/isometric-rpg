@@ -140,13 +140,15 @@ export class World extends THREE.Group {
       console.error(`Failed to add object - group '${group}' does not exist.`)
     }
 
-    // Add event listener when object is moved
-    object.onMove = (oldCoords, newCoords) => {
-      console.log('Deleting ', oldCoords);
-      console.log('Setting ', newCoords);
+    object.onMove = (object, oldCoords, newCoords) => {
       this.#objectMap.delete(getKey(oldCoords));
       this.#objectMap.set(getKey(newCoords), object);
     }
+
+    object.onDestroy = (object) => {
+      this.#objectMap.delete(getKey(object.coords));
+      object.removeFromParent();
+    };
 
     this.#objectMap.set(getKey(object.coords), object);
 

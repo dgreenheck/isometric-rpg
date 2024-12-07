@@ -24,10 +24,17 @@ export class GameObject extends THREE.Mesh {
 
   /**
    * Callback triggered when the object is moved
+   * @param {GameObject} object
    * @param {THREE.Vector3} oldCoords 
    * @param {THREE.Vector3} newCoords 
    */
   onMove = (oldCoords, newCoords) => { };
+
+  /**
+   * Callback triggered when object hitpoints go to zero
+   * @param {GameObject} object
+   */
+  onDestroy = (object) => { };
 
   /**
    * @param {THREE.Vector3} coords 
@@ -39,6 +46,7 @@ export class GameObject extends THREE.Mesh {
     this.coords = coords;
 
     this.healthDisplay = new THREE.Sprite();
+    this.healthDisplay.layers.set(1);
     this.healthDisplay.center.set(0.2, 0.6);
     this.healthDisplay.position.y = 0.5;
     this.healthDisplay.visible = false;
@@ -51,7 +59,7 @@ export class GameObject extends THREE.Mesh {
    * Returns true if player's hit points are at zero
    */
   get isDead() {
-    return (this.hitPoints === 0);
+    return (this.hitPoints <= 0);
   }
 
   /**
@@ -59,10 +67,11 @@ export class GameObject extends THREE.Mesh {
    */
   hit(damage) {
     this.hitPoints -= damage;
-    if (this.hitPoints <= 0) {
-      this.hitPoints = 0;
-    }
     this.updateHealthOverlay();
+
+    if (this.hitPoints <= 0 && this.onDestroy) {
+      this.onDestroy(this);
+    }
   }
 
   /**
@@ -80,7 +89,7 @@ export class GameObject extends THREE.Mesh {
     )
 
     if (this.onMove) {
-      this.onMove(oldCoords, this.coords);
+      this.onMove(this, oldCoords, this.coords);
     }
   }
 

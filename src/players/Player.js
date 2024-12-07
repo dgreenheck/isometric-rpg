@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GameObject } from '../objects/GameObject';
 import { World } from '../world';
 import { Action, MovementAction, WaitAction } from '../actions';
+import { MeleeAttackAction } from '../actions/MeleeAttackAction';
 
 const geometry = new THREE.CapsuleGeometry(0.25, 0.5);
 
@@ -29,6 +30,7 @@ export class Player extends GameObject {
   getActions() {
     return [
       new MovementAction(this),
+      new MeleeAttackAction(this),
       new WaitAction()
     ];
   }

@@ -26,6 +26,8 @@ export class CombatManager {
   async takeTurns(world) {
     while (true) {
       for (const player of this.players) {
+        if (player.isDead) continue;
+
         player.material.color = new THREE.Color(0xffff00);
 
         let actionPerformed = false;

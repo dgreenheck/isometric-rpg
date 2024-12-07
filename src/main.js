@@ -18,10 +18,19 @@ renderer.setPixelRatio(devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.OrthographicCamera(
+  window.innerWidth / -2,
+  window.innerWidth / 2,
+  window.innerHeight / 2,
+  window.innerHeight / -2,
+  0.1, 1000);
+camera.zoom = 100;
+camera.position.set(10, 5, 10);
+camera.updateProjectionMatrix();
+camera.layers.enable(1);
+
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(5, 0, 5);
-camera.position.set(0, 2, 0);
 controls.update();
 
 RaycastingHelper.initialize(camera);
@@ -46,11 +55,13 @@ function animate() {
   stats.update();
 }
 
+/*
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+*/
 
 const worldFolder = gui.addFolder('World');
 worldFolder.add(world, 'width', 1, 20, 1).name('Width');

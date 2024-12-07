@@ -71,8 +71,6 @@ export function search(start, end, world) {
   let curr = end;
   const path = [curr];
 
-  console.log(path);
-
   while (getKey(curr) !== getKey(start)) {
     const prev = cameFrom.get(getKey(curr));
     path.push(prev);

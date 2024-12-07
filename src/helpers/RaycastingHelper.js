@@ -9,6 +9,7 @@ class RaycastingHelper {
 
   constructor() {
     this.raycaster = new THREE.Raycaster();
+    this.raycaster.layers.disable(1);
   }
 
   initialize(camera) {
@@ -56,7 +57,7 @@ class RaycastingHelper {
    * @param {World} world
    * @returns {Promise<GameObject | null>}
    */
-  async getTargetObject(world) {
+  async getSelectedObject(world) {
     return new Promise((resolve) => {
       /**
        * Event handler when user clicks on the screen
