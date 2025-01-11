@@ -31,7 +31,7 @@
 - [x] Combat
   - [x] Action
     - [x] MeleeAttackAction
-    - [ ] RangedAttackAction
+    - [x] RangedAttackAction
     - [x] WaitAction
   - [x] Enemies
     - [x] Hit Points

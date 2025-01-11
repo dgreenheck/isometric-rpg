@@ -1,27 +1,8 @@
 import * as THREE from 'three';
-import { Player } from './players/Player';
 import { World } from './world';
 import { updateStatus } from './utils';
 
 export class CombatManager {
-  /**
-   * @type {Player[]} Active players in combat
-   */
-  players = [];
-
-  constructor() {
-
-  }
-
-  /**
-   * Get player's initiative and add them to the
-   * array of players
-   * @param {Player} player 
-   */
-  addPlayer(player) {
-    this.players.push(player);
-  }
-
   /**
    * Main combat loop
    * @param {World} world 

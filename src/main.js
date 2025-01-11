@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import Stats from 'three/addons/libs/stats.module.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import { World } from './world';
-import { HumanPlayer } from './players/HumanPlayer';
+import inputManager from './InputManager';
 import { CombatManager } from './CombatManager';
 
 const gui = new GUI();
@@ -26,8 +26,10 @@ controls.target.set(5, 0, 5);
 camera.position.set(0, 2, 0);
 controls.update();
 
-const world = new World(10, 10, camera);
+const world = new World(10, 10);
 scene.add(world);
+
+inputManager.initialize(camera, world);
 
 const combatManager = new CombatManager();
 

@@ -14,10 +14,9 @@ export class Player extends GameObject {
   /**
    * Instantiates a new instance of the player
    * @param {THREE.Vector3} coords 
-   * @param {THREE.Camera} camera 
    * @param {World} world 
    */
-  constructor(coords, camera, world) {
+  constructor(coords, world) {
     const material = new THREE.MeshStandardMaterial({ color: 0x4040c0 });
     const playerMesh = new THREE.Mesh(geometry, material);
     playerMesh.position.set(0.5, 0.5, 0.5);
@@ -27,7 +26,6 @@ export class Player extends GameObject {
     this.healthOverlay.visible = true;
 
     this.moveTo(coords);
-    this.camera = camera;
     this.world = world;
   }
 
