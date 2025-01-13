@@ -19,12 +19,11 @@ export class MovementAction extends Action {
   /**
    * @type {GameObject}
    */
-  constructor(source, world) {
+  constructor(source) {
     super(source);
-    this.world = world;
   }
 
-  async perform() {
+  async perform(world) {
     return new Promise((resolve) => {
       function updateSourcePosition() {
         // If we reached the end of the path, then stop
@@ -33,7 +32,7 @@ export class MovementAction extends Action {
         // the combat manager
         if (this.pathIndex === this.path.length) {
           clearInterval(this.pathUpdater);
-          this.world.path.clear();
+          world.path.clear();
           resolve();
 
           // Otherwise, move source object to the next path node
@@ -52,7 +51,7 @@ export class MovementAction extends Action {
       this.path.forEach((coords) => {
         const node = breadcrumb.clone();
         node.position.set(coords.x + 0.5, 0, coords.z + 0.5);
-        this.world.path.add(node);
+        world.path.add(node);
       });
 
       // Trigger interval function to update player's position
@@ -61,14 +60,14 @@ export class MovementAction extends Action {
     });
   }
 
-  async canPerform() {
+  async canPerform(world) {
     const selectedCoords = await this.source.getTargetSquare();
 
     // Find path from player's current position to the selected square
     this.path = search(
       this.source.coords,
       selectedCoords,
-      this.world);
+      world);
 
     if (this.path === null) {
       return {

@@ -1,20 +1,9 @@
-import * as THREE from 'three';
 import { Player } from './Player';
 import { Action } from '../actions';
 import inputManager from '../InputManager';
 
 export class HumanPlayer extends Player {
   name = 'HumanPlayer';
-
-  /**
-   * @type {THREE.Raycaster}
-   */
-  raycaster = new THREE.Raycaster();
-
-  constructor(coords, world) {
-    super(coords, world);
-    this.raycaster.layers.disable(1);
-  }
 
   /**
    * Wait for the player to choose a target square

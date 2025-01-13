@@ -1,4 +1,5 @@
 import { GameObject } from '../objects/GameObject';
+import { World } from '../world';
 
 /**
  * Base action class
@@ -21,16 +22,18 @@ export class Action {
 
   /**
    * Performs the action
+   * @param {World} world 
    */
-  async perform() {
+  async perform(world) {
     // Do nothing
   }
 
   /**
    * Returns true/false if the action can be performed
+   * @param {World} world 
    * @returns {Promise<{ value: boolean, reason: string? >}
    */
-  async canPerform() {
+  async canPerform(world) {
     return { value: true };
   }
 }
