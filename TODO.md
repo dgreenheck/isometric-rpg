@@ -46,9 +46,9 @@
     - [x] Display player/object hit points above their head
 - [ ] Graphics Overhaul
   - [ ] 3D assets for the props
+  - [ ] Improved terrain (perlin noise? hills? water?)
   - [ ] 3D assets for the player models
   - [ ] Skybox
-  - [ ] Improved terrain (perlin noise? hills? water?)
   - [ ] Fog
 - [ ] Player Animation
 - [ ] Enemy AI

@@ -18,7 +18,7 @@ export class World extends THREE.Group {
     this.width = width;
     this.height = height;
     this.treeCount = 10;
-    this.rockCount = 10;
+    this.rockCount = 30;
     this.bushCount = 10;
 
     this.objects = new THREE.Group();

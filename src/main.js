@@ -12,13 +12,17 @@ const stats = new Stats()
 document.body.appendChild(stats.dom)
 
 const renderer = new THREE.WebGLRenderer();
+renderer.setClearColor(0x80b0ff);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setAnimationLoop(animate);
 renderer.setPixelRatio(devicePixelRatio);
+
 document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+scene.fog = new THREE.Fog(0x80b0ff, 10, 40);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.layers.enable(1);
 
 const controls = new OrbitControls(camera, renderer.domElement);
